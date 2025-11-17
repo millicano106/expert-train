@@ -7,19 +7,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go-demo/testhelpers"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
 type CustomerRepoTestSuite struct {
 	suite.Suite
-	pgContainer *testhelpers.PostgresContainer
+	pgContainer *postgres.PostgresContainer
 	repository  *Repository
 	ctx         context.Context
 }
 
 func (suite *CustomerRepoTestSuite) SetupSuite() {
 	suite.ctx = context.Background()
-	pgContainer, err := testhelpers.CreatePostgresContainer(suite.ctx)
+	pgContainer, err := postgres.CreatePostgresContainer(suite.ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
