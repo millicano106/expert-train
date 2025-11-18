@@ -2,7 +2,6 @@ package customer
 
 import (
 	"context"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ func TestCustomerRepository(t *testing.T) {
 
 	pgContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:15.3-alpine"),
-		postgres.WithInitScripts(filepath.Join("..", "testdata", "init-db.sql")),
+		// postgres.WithInitScripts(filepath.Join("..", "testdata", "init-db.sql")),
 		postgres.WithDatabase("test-db"),
 		postgres.WithUsername("postgres"),
 		postgres.WithPassword("postgres"),
@@ -37,6 +36,19 @@ func TestCustomerRepository(t *testing.T) {
 
 	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
 	assert.NoError(t, err)
+
+	// Run your init SQL manually
+	sql := `
+		CREATE TABLE IF NOT EXISTS customers (id serial, name varchar(255), email varchar(255));
+		INSERT INTO customers(name, email) VALUES ('John', 'john@gmail.com');
+	`
+
+	initRepo, err := NewRepository(ctx, connStr)
+	_, err = initRepo.conn.Exec(ctx, sql)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	customerRepo, err := NewRepository(ctx, connStr)
 	assert.NoError(t, err)
