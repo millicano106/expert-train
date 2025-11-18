@@ -3,11 +3,15 @@ package customer
 import (
 	"context"
 	"log"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 type CustomerRepoTestSuite struct {
@@ -19,12 +23,22 @@ type CustomerRepoTestSuite struct {
 
 func (suite *CustomerRepoTestSuite) SetupSuite() {
 	suite.ctx = context.Background()
-	pgContainer, err := postgres.CreatePostgresContainer(suite.ctx)
+	pgContainer, err := postgres.RunContainer(suite.ctx,
+		testcontainers.WithImage("postgres:15.3-alpine"),
+		postgres.WithInitScripts(filepath.Join("..", "testdata", "init-db.sql")),
+		postgres.WithDatabase("test-db"),
+		postgres.WithUsername("postgres"),
+		postgres.WithPassword("postgres"),
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2).WithStartupTimeout(5*time.Second)),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 	suite.pgContainer = pgContainer
-	repository, err := NewRepository(suite.ctx, suite.pgContainer.ConnectionString)
+	connStr, err := pgContainer.ConnectionString(suite.ctx, "sslmode=disable")
+	repository, err := NewRepository(suite.ctx, connStr)
 	if err != nil {
 		log.Fatal(err)
 	}

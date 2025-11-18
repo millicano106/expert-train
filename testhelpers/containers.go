@@ -4,7 +4,6 @@ import (
 	"context"
 	"path/filepath"
 	"time"
-	"github.com/millicano106/expert-train/customer"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
